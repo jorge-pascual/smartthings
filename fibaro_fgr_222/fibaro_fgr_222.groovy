@@ -57,7 +57,7 @@ metadata {
             state "syncing" , label:"Syncing", backgroundColor:"#a8a800"
         }
         main(["mainTitle"])
-        details(["mainTitle", "up", "power", "refresh", "down", "sync", "calibrate"])
+        details(["mainTitle", "sync", "power", "up", "calibrate", "refresh", "down"])
     }
 
     preferences {
@@ -202,6 +202,8 @@ def off() {
     close()
 }
 
+
+
 def open() {
     logger.debug("open")
     if (invert) {
@@ -226,14 +228,16 @@ def privateOpen() {
     def cmds = []
     def currentWindowShade = device.currentValue('windowShade')
     if (currentWindowShade == "opening" || currentWindowShade == "closing") {
-        log.debug("SHOULD STOP. BUT I DO NOT KNOW HOW :-(")
-        cmds << zwave.basicV1.basicSet(value: 0xFF).format()
+        log.debug("Stopping")
+        // cmds << zwave.basicV1.basicSet(value: 0xFF).format()
+        cmds << zwave.switchBinaryV1.switchBinarySet(switchValue: 0x00).format()
+        sendEvent(name: "windowShade", value: "partially open", isStateChange: true)
     }
     else {
         cmds << zwave.basicV1.basicSet(value: 0xFF).format()
         sendEvent(name: "windowShade", value: invert ? "closing" : "opening", isStateChange: true)
     }
-    log.debug("open: ${cmds}")
+    log.debug("privateOpen: ${cmds}")
     return delayBetween(cmds, 500)
 }
 
@@ -241,14 +245,16 @@ def privateClose() {
     def cmds = []
     def currentWindowShade = device.currentValue('windowShade')
     if (currentWindowShade == "closing" || currentWindowShade == "opening") {
-        log.debug("SHOULD STOP. BUT I DO NOT KNOW HOW :-(")
-        cmds << zwave.basicV1.basicSet(value: 0).format()
+        log.debug("Stopping")
+        // cmds << zwave.basicV1.basicSet(value: 0).format()
+        cmds << zwave.switchBinaryV1.switchBinarySet(switchValue: 0xFF).format()
+        sendEvent(name: "windowShade", value: "partially open", isStateChange: true)       
     }
     else {
         cmds << zwave.basicV1.basicSet(value: 0).format()
         sendEvent(name: "windowShade", value: invert ? "opening": "closing", isStateChange: true)
     }
-    log.debug("close: ${cmds}")
+    log.debug("privateClose: ${cmds}")
     return delayBetween(cmds, 500)
 }
 
